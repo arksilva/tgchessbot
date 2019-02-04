@@ -10,6 +10,7 @@
 sudo pip3 install telepot
 sudo pip3 install python-chess
 sudo pip3 install Pillow
+sudo pip3 install stockfish
 ```
 
 * Download the code from my [Github repo](https://github.com/cxjdavin/tgchessbot)
@@ -20,6 +21,6 @@ sudo pip3 install Pillow
 To learn more, read the blog post here: http://davinchoo.com/project/tgchess/
 
 # Acknowledgements
-This bot is built with the help of [`telepot`](https://github.com/nickoala/telepot), [`python-chess`](https://github.com/niklasf/python-chess) and [`Pillow`](https://pillow.readthedocs.io/en/3.2.x/), with chess piece images from [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) on [Wikipedia](https://en.wikipedia.org/wiki/Chess_piece).
+This bot is built with the help of [`telepot`](https://github.com/nickoala/telepot), [`stockfish for Python`](https://github.com/zhelyabuzhsky/stockfish), [`python-chess`](https://github.com/niklasf/python-chess) and [`Pillow`](https://pillow.readthedocs.io/en/3.2.x/), with chess piece images from [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) on [Wikipedia](https://en.wikipedia.org/wiki/Chess_piece).
 
 Many thanks to [`vesatoivonen`](https://github.com/vesatoivonen) for useful suggestions and bug fixes.
