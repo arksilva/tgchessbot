@@ -1,11 +1,29 @@
 import chess # https://github.com/niklasf/python-chess
+import chess.variant
 from renderer import *
 
 class Match():
     '''Class to handle match related stuff and interface with python-chess'''
-    def __init__(self, chat_id):
+    def __init__(self, chat_id, gametype="chess"):
         ''' Set up local variables'''
-        self.board = chess.Board()
+        if gametype == "racingkings":
+            self.board = chess.variant.RacingKingsBoard()
+        elif gametype == "horde":
+            self.board = chess.variant.HordeBoard()
+        elif gametype == "kingofthehill":
+            self.board = chess.variant.KingOfTheHillBoard()
+        elif gametype == "suicide":
+            self.board = chess.variant.SuicideBoard()
+        elif gametype == "giveaway":
+            self.board = chess.variant.GiveawayBoard()
+        elif gametype == "atomic":
+            self.board = chess.variant.AtomicBoard()
+        elif gametype == "3check":
+            self.board = chess.variant.ThreeCheckBoard()
+        elif gametype == "crazyhouse":
+            self.board = chess.variant.CrazyhouseBoard()
+        else:
+            self.board = chess.Board()
         self.chat_id = chat_id
         self.white_id = None
         self.black_id = None
@@ -77,6 +95,12 @@ class Match():
         else:
             return None
 
+    def fen(self):
+        try:
+            return self.board.fen()
+        except:
+            return None
+
     def parse_move(self, m):
         '''Feed move into python-chess to simulate'''
         # python-chess uses O instead of 0
@@ -96,6 +120,13 @@ class Match():
                 return None
         return move
 
+    def pop(self):
+        try:
+            self.board.pop()
+        except IndexError:
+            return False
+        return True
+
     def make_move(self, m):
         move = self.parse_move(m)
         if not move:
@@ -114,6 +145,8 @@ class Match():
         if self.board.is_checkmate(): return "Checkmate"
         elif self.board.is_check(): return "Check"
         elif self.board.is_stalemate(): return "Stalemate"
+        elif self.board.is_variant_draw(): return "Draw"
+        elif self.board.is_variant_end(): return "First"
 
     def offer_draw(self, sender_id):
         '''Offer a draw'''

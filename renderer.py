@@ -8,7 +8,7 @@ class Renderer():
 	
 	def __init__(self, turn=True):
 		'''Pre-draw an empty board and pre-load the pieces'''
-		self.turn = turn
+		self.turn = True #turn
 		self.grid_size = (40,40)
 		self.board = self.draw_empty_board()
 		self.piece_locations = './pieces'
@@ -26,19 +26,23 @@ class Renderer():
 
 		# Create a white 10x10 board
 		# 'L' mode stands for greyscale
-		board = Image.new('L', [10*x for x in self.grid_size], 255)
+		board = Image.new('RGB', [10*x for x in self.grid_size], (255,255,255))
 
 		# Fill in the black cells with grey
-		grey_color = 175
+		blacks_color = (187,136,91)
 		black_cells = [(r,c) if r % 2 == 0 else (r,c+1) for r in range(1,9) for c in range(1,9,2)]
 		for bc in black_cells:
-			ImageDraw.Draw(board).rectangle(self.grid_to_coords(bc), fill = grey_color)
+			ImageDraw.Draw(board).rectangle(self.grid_to_coords(bc), fill = blacks_color)
+		whites_color = (243,218,176)
+		white_cells = [(r,c+1) if r % 2 == 0 else (r,c) for r in range(1,9) for c in range(1,9,2)]
+		for wc in white_cells:
+			ImageDraw.Draw(board).rectangle(self.grid_to_coords(wc), fill = whites_color)
 
 		# Draw black outline for board
-		ImageDraw.Draw(board).line([self.grid_size[0], self.grid_size[1], 9 * self.grid_size[0], self.grid_size[1]], width=2)
-		ImageDraw.Draw(board).line([self.grid_size[0], self.grid_size[1], self.grid_size[0], 9 * self.grid_size[1]], width=2)
-		ImageDraw.Draw(board).line([9 * self.grid_size[0], self.grid_size[1], 9 * self.grid_size[0], 9 * self.grid_size[1]], width=2)
-		ImageDraw.Draw(board).line([self.grid_size[0], 9 * self.grid_size[1], 9 * self.grid_size[0], 9 * self.grid_size[1]], width=2)
+		ImageDraw.Draw(board).line([self.grid_size[0], self.grid_size[1], 9 * self.grid_size[0], self.grid_size[1]], width=2, fill=(0,0,0))
+		ImageDraw.Draw(board).line([self.grid_size[0], self.grid_size[1], self.grid_size[0], 9 * self.grid_size[1]], width=2, fill=(0,0,0))
+		ImageDraw.Draw(board).line([9 * self.grid_size[0], self.grid_size[1], 9 * self.grid_size[0], 9 * self.grid_size[1]], width=2, fill=(0,0,0))
+		ImageDraw.Draw(board).line([self.grid_size[0], 9 * self.grid_size[1], 9 * self.grid_size[0], 9 * self.grid_size[1]], width=2, fill=(0,0,0))
 
 		# Write down axis
 		letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
@@ -48,7 +52,7 @@ class Renderer():
 		font = ImageFont.truetype("./fonts/Helvetica Bold.ttf", 20)
 		for [txt, x, y] in axes:
 			# Add __ * self.grid_size to try to center the text
-			ImageDraw.Draw(board).text((x + 0.35*self.grid_size[0], y + 0.35*self.grid_size[1]), txt, font=font)
+			ImageDraw.Draw(board).text((x + 0.35*self.grid_size[0], y + 0.35*self.grid_size[1]), txt, font=font, fill=(0,0,0))
 
 		return board
 
