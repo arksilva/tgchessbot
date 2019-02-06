@@ -28,20 +28,22 @@ class tgchessBot(telepot.Bot):
         startsheet += "`@alexchessbot /stats` displays how many wins, draws and losses you accumulated across all games you have played via @alexchessbot. If user base grows sufficiently large, we intend to incorporate a global ELO rating system.\n\n"
         startsheet += "At the moment, we are unable to support inline commands to play your matches unfortunately.\n\n"
         startsheet += "*Contact*\n\n"
-        startsheet += "This bot is built with the help of [`telepot`](https://github.com/nickoala/telepot), [`python-chess`](https://github.com/niklasf/python-chess) and [`Pillow`](https://pillow.readthedocs.io/en/3.2.x/), with chess piece images from [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) on [Wikipedia](https://en.wikipedia.org/wiki/Chess_piece).\n\n"
-        startsheet += "For more information, visit https://github.com/cxjdavin/tgchessbot/\n"
+        startsheet += "This bot is built with the help of [`tgchessbot`](https://github.com/cxjdavin/tgchessbot), [`telepot`](https://github.com/nickoala/telepot), [`stockfish for Python`](https://github.com/zhelyabuzhsky/stockfish), [`python-chess`](https://github.com/niklasf/python-chess) and [`Pillow`](https://pillow.readthedocs.io/en/3.2.x/), with chess piece images from [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) on [Wikipedia](https://en.wikipedia.org/wiki/Chess_piece).\n\n"
+        startsheet += "For more information, visit https://github.com/arksilva/tgchessbot/\n"
         startsheet += "Contact me at `tgchessbot@gmail.com` for bug reports, etc."
 
         helpsheet = "Allowed commands:\n"
         helpsheet += "`/help`: Display help sheet\n"
-        helpsheet += "`/create <white/black> [variant]`: Creates a chess match with your preferred colour. Different variants are available: chess (default), Suicide, Giveaway, Atomic, KingoftheHill, RacingKings, Horde, 3check, Crazyhouse. E.g. `/create white KingOfTheHill`\n"
+        helpsheet += "`/create <white/black> [variant] [bot] [power=3]`: Creates a chess match with your preferred colour. Different variants are available: chess (default), Suicide, Giveaway, Atomic, KingoftheHill, RacingKings, Horde, 3check, Crazyhouse. E.g. `/create white KingOfTheHill`. Power is an ingeger between 2 and 12.\n"
         helpsheet += "`/join`: Join the existing match\n"
         helpsheet += "`/show`: Show current board state\n"
         helpsheet += "`/move <move>` or `<move>`: Make a move using SAN or UCI. E.g. `/move e4` or `/move e2e4`, `/move Nf3` or `g1f3`. To learn more: [https://en.wikipedia.org/wiki/Algebraic_notation_(chess)]\n"
+        helpsheet += "`/pop`: Revert your opponent last move\n"
         helpsheet += "`/offerdraw`: Offer a draw. Making a move automatically cancels any existing draw offers.\n"
         helpsheet += "`/rejectdraw`: Reject opponent's draw offer. Making a move automatically rejects any existing draw offers.\n"
         helpsheet += "`/claimdraw`: Accept a draw offer or claim a draw when `fifty-move rule` or `threefold repetition` is met. To learn more: [https://en.wikipedia.org/wiki/Draw_(chess)]\n"
         helpsheet += "`/resign`: Resign from the match\n"
+        helpsheet += "`/fen`: Print board state in FEN\n"
         helpsheet += "`/stats`: View your game stats across all matches\n\n"
         helpsheet += "If there are multiple bots, append `@alexchessbot` behind your commands. E.g. `/move@alexchessbot e4`"
 
@@ -150,38 +152,61 @@ class tgchessBot(telepot.Bot):
         elif tokens[0] == "/create" or tokens[0] == "/create@alexchessbot":
             # !create <current player color: white/black>
             if len(tokens) < 2:
-                bot.sendMessage(chat_id, "Incorrect usage. `Usage: /create <White/Black> [variant]`. E.g. `/create white`", parse_mode='Markdown')
+                bot.sendMessage(chat_id, "Incorrect usage. `Usage: /create <White/Black> [variant] [bot] [power]`. E.g. `/create white`", parse_mode='Markdown')
             tokens[1] = tokens[1].lower()
             if tokens[1] != "white" and tokens[1] != "black":
-                bot.sendMessage(chat_id, "Incorrect usage. `Usage: /create <White/Black> [variant]`. E.g. `/create white`", parse_mode='Markdown')
+                bot.sendMessage(chat_id, "Incorrect usage. `Usage: /create <White/Black> [variant] [bot] [power]`. E.g. `/create white`", parse_mode='Markdown')
             elif match != None:
                 bot.sendMessage(chat_id, "There is already a chess match going on.")
+            if len(tokens) >=4 and tokens[3] != "bot":
+                bot.sendMessage(chat_id, "Incorrect usage. `Usage: /create <White/Black> [variant] [bot] [power]`. E.g. `/create white`", parse_mode='Markdown')
             else:
                 gametype = "chess"
                 if len(tokens) >= 3:
-                    if tokens[2].lower() == "racingkings":
+                    tokens[2] = tokens[2].lower()
+                    if tokens[2] == "racingkings":
                         gametype = "racingkings"
-                    elif tokens[2].lower() == "horde":
+                    elif tokens[2] == "horde":
                         gametype = "horde"
-                    elif tokens[2].lower() == "kingofthehill":
+                    elif tokens[2] == "kingofthehill":
                         gametype = "kingofthehill"
-                    elif tokens[2].lower() == "suicide":
+                    elif tokens[2] == "suicide":
                         gametype = "suicide"
-                    elif tokens[2].lower() == "giveaway":
+                    elif tokens[2] == "giveaway":
                         gametype = "giveaway"
-                    elif tokens[2].lower() == "atomic":
+                    elif tokens[2] == "atomic":
                         gametype = "atomic"
-                    elif tokens[2].lower() == "3check":
+                    elif tokens[2] == "3check":
                         gametype = "3check"
-                    elif tokens[2].lower() == "crazyhouse":
+                    elif tokens[2] == "crazyhouse":
                         gametype = "crazyhouse"
-                self.gamelog[chat_id] = Match(chat_id, gametype)
-                match = self.gamelog[chat_id]
-                if tokens[1] == "white":
-                    match.joinw(sender_id, sender_username)
+                if len(tokens) >= 4 and tokens[3] == "bot":
+                    if gametype == "chess" or gametype == "horde":
+                        self.gamelog[chat_id] = Match(chat_id, gametype)
+                        match = self.gamelog[chat_id]
+                        if len(tokens) >= 5:
+                            try:
+                                power = int(tokens[4])
+                                if power < 2:
+                                    power = 2
+                                if power > 12:
+                                    power = 12
+                            except ValueError:
+                                power = 3
+                            match.joinbot(tokens[1], power)
+                        else:
+                            match.joinbot(tokens[1])
+                        bot.sendMessage(chat_id, "Chess match created. Bot is playing as {}. Waiting for opponent...".format(tokens[1]), parse_mode = "Markdown")
+                    else:
+                        bot.sendMessage(chat_id, "Bot only supported in Chess and Horde variants", parse_mode = "Markdown")
                 else:
-                    match.joinb(sender_id, sender_username)
-                bot.sendMessage(chat_id, "Chess match created. {} is playing as {}. Waiting for opponent...".format(sender_username, tokens[1]), parse_mode = "Markdown")
+                    self.gamelog[chat_id] = Match(chat_id, gametype)
+                    match = self.gamelog[chat_id]
+                    if tokens[1] == "white":
+                        match.joinw(sender_id, sender_username)
+                    else:
+                        match.joinb(sender_id, sender_username)
+                    bot.sendMessage(chat_id, "Chess match created. {} is playing as {}. Waiting for opponent...".format(sender_username, tokens[1]), parse_mode = "Markdown")
         elif tokens[0] == "/join" or tokens[0] == "/join@alexchessbot":
             if match == None:
                 bot.sendMessage(chat_id, "There is no chess match going on.")
@@ -195,6 +220,25 @@ class tgchessBot(telepot.Bot):
                 # Print starting game state
                 filename = match.print_board(chat_id)
                 turn_id = match.get_turn_id()
+                # If bot is white - make first move
+                if turn_id == 0:
+                    res = match.bot_move()
+                    filename = match.print_board(chat_id)
+                    if res == "Checkmate":
+                        bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Checkmate!")
+                        self.game_end(chat_id, players, match.get_color(0))
+                    elif res == "Stalemate":
+                        bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Stalemate!")
+                        self.game_end(chat_id, players, "Draw")
+                    elif res == "Check":
+                        bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Check!")
+                    elif res == "Draw":
+                        bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Draw!")
+                        self.game_end(chat_id, players, "Draw")
+                    elif res == "First":
+                        bot.sendPhoto(chat_id, open(filename, "rb"), caption = "First!")
+                        self.game_end(chat_id, players, match.get_color(0))
+                    turn_id = match.get_turn_id()
                 bot.sendPhoto(chat_id, open(filename, "rb"), caption = "@{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
         elif tokens[0] == "/show" or tokens[0] == "/show@alexchessbot":
             if match == None:
@@ -240,7 +284,30 @@ class tgchessBot(telepot.Bot):
                         self.game_end(chat_id, players, match.get_color(sender_id))
                     else:
                         turn_id = match.get_turn_id()
-                        bot.sendPhoto(chat_id, open(filename, "rb"), caption = "@{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
+                        #if bot -> make move here
+                        if turn_id == 0:
+                            res = match.bot_move()
+                            filename = match.print_board(chat_id)
+                            if res == "Checkmate":
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Checkmate!")
+                                self.game_end(chat_id, players, match.get_color(0))
+                            elif res == "Stalemate":
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Stalemate!")
+                                self.game_end(chat_id, players, "Draw")
+                            elif res == "Check":
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Check!")
+                            elif res == "Draw":
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Draw!")
+                                self.game_end(chat_id, players, "Draw")
+                            elif res == "First":
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "First!")
+                                self.game_end(chat_id, players, match.get_color(0))
+                            else:
+                                turn_id = match.get_turn_id()
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "@{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
+                        else:
+                            turn_id = match.get_turn_id()
+                            bot.sendPhoto(chat_id, open(filename, "rb"), caption = "@{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
         elif tokens[0] == "/pop" or tokens[0] == "/pop@alexchessbot":
             if match == None:
                 bot.sendMessage(chat_id, "There is no chess match going on.")
@@ -248,13 +315,17 @@ class tgchessBot(telepot.Bot):
                 bot.sendMessage(chat_id, "You are not involved in the chess match.")
             elif match.get_turn_id() != sender_id:
                 bot.sendMessage(chat_id, "It's not your turn.")
+#            elif match.is_bot("white") or match.is_bot("black"):
+#                bot.sendMessage(chat_id, "Can't revert moves with bot player")
             else:
+                if match.is_bot("white") or match.is_bot("black"):
+                    match.pop()
                 if match.pop():
-                     filename = match.print_board(chat_id)
-                     turn_id = match.get_turn_id()
-                     bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Reverting last move. @{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
+                    filename = match.print_board(chat_id)
+                    turn_id = match.get_turn_id()
+                    bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Reverting last move. @{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
                 else:
-                     bot.sendMessage(chat_id, "Nothing to revert.")
+                    bot.sendMessage(chat_id, "Nothing to revert.")
         elif tokens[0] == "/fen" or tokens[0] == "/fen@alexchessbot": # Print FEN
             if match == None:
                 bot.sendMessage(chat_id, "There is no chess match going on.")

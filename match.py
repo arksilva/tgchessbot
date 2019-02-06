@@ -1,5 +1,6 @@
 import chess # https://github.com/niklasf/python-chess
 import chess.variant
+from stockfish import Stockfish
 from renderer import *
 
 class Match():
@@ -29,6 +30,10 @@ class Match():
         self.black_id = None
         self.white_name = None
         self.black_name = None
+        self.white_bot = False
+        self.white_bot_power = 3
+        self.black_bot = False
+        self.black_bot_power = 3
         self.draw_offer = None
         self.imgurid = None
         self.drawoffer = None
@@ -47,6 +52,28 @@ class Match():
             self.joinw(pid, pname)
         else:
             self.joinb(pid, pname)
+
+    def joinbot(self, color, power=3):
+        if self.board.uci_variant == "chess" or self.board.uci_variant == "horde":
+            if color == "white":
+               self.white_bot = True
+               self.white_name = "Bot"
+               self.white_id = 0
+               self.white_bot_power = power
+            else:
+               self.black_bot = True
+               self.black_name = "Bot"
+               self.black_id = 0
+               self.black_bot_power = power
+            return True
+        else:
+            return False
+
+    def is_bot(self, color):
+        if color == "white":
+            return self.white_bot
+        else:
+            return self.black_bot
 
     def get_players(self):
         '''Get player id and colors'''
@@ -126,6 +153,16 @@ class Match():
         except IndexError:
             return False
         return True
+
+    def bot_move(self):
+        stfish = Stockfish('stockfish')
+        stfish.set_fen_position(self.fen())
+        if self.board.turn:
+            stfish.depth = self.white_bot_power
+        else:
+            stfish.depth = self.black_bot_power
+        move = stfish.get_best_move()
+        return self.make_move(move)
 
     def make_move(self, m):
         move = self.parse_move(m)
