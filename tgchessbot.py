@@ -181,7 +181,7 @@ class tgchessBot(telepot.Bot):
                     elif tokens[2] == "crazyhouse":
                         gametype = "crazyhouse"
                 if len(tokens) >= 4 and tokens[3] == "bot":
-                    if gametype == "chess" or gametype == "horde":
+                    if gametype == "chess":
                         self.gamelog[chat_id] = Match(chat_id, gametype)
                         match = self.gamelog[chat_id]
                         if len(tokens) >= 5:
@@ -198,7 +198,7 @@ class tgchessBot(telepot.Bot):
                             match.joinbot(tokens[1])
                         bot.sendMessage(chat_id, "Chess match created. Bot is playing as {}. Waiting for opponent...".format(tokens[1]), parse_mode = "Markdown")
                     else:
-                        bot.sendMessage(chat_id, "Bot only supported in Chess and Horde variants", parse_mode = "Markdown")
+                        bot.sendMessage(chat_id, "Bot only supported in classic chess variant", parse_mode = "Markdown")
                 else:
                     self.gamelog[chat_id] = Match(chat_id, gametype)
                     match = self.gamelog[chat_id]

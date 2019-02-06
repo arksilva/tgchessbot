@@ -54,7 +54,7 @@ class Match():
             self.joinb(pid, pname)
 
     def joinbot(self, color, power=3):
-        if self.board.uci_variant == "chess" or self.board.uci_variant == "horde":
+        if self.board.uci_variant == "chess":
             if color == "white":
                self.white_bot = True
                self.white_name = "Bot"
