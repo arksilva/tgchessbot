@@ -274,8 +274,6 @@ class tgchessBot(telepot.Bot):
                     elif res == "Stalemate":
                         bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Stalemate!")
                         self.game_end(chat_id, players, "Draw")
-                    elif res == "Check":
-                        bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Check!")
                     elif res == "Draw":
                         bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Draw!")
                         self.game_end(chat_id, players, "Draw")
@@ -306,8 +304,11 @@ class tgchessBot(telepot.Bot):
                                 turn_id = match.get_turn_id()
                                 bot.sendPhoto(chat_id, open(filename, "rb"), caption = "@{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
                         else:
-                            turn_id = match.get_turn_id()
-                            bot.sendPhoto(chat_id, open(filename, "rb"), caption = "@{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
+                            if res == "Check":
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "Check!")
+                            else:
+                                turn_id = match.get_turn_id()
+                                bot.sendPhoto(chat_id, open(filename, "rb"), caption = "@{} ({}) to move.".format(match.get_name(turn_id), match.get_color(turn_id)))
         elif tokens[0] == "/pop" or tokens[0] == "/pop@alexchessbot":
             if match == None:
                 bot.sendMessage(chat_id, "There is no chess match going on.")
